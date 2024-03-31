@@ -1,146 +1,259 @@
-<!-- ////////////////////////////////
-    Súc Vật Lắm Mới Lấy Source Của Tao
-    ////////////////////////////////   -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<link rel="icon" href="https://i.ibb.co/Fh9X5hM/Dangg.jpg">
-<body onclick="audio.play()">	
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Đăngg</title>
+    <link rel="icon" href="https://i.ibb.co/Fh9X5hM/Dangg.jpg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăngg</title>
 
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif; 
-    }
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
 
-    .container {
-      width: 100%;
-      height: 100vh;
-      background-image: url('https://c4.wallpaperflare.com/wallpaper/916/657/97/anime-your-name-hd-wallpaper-preview.jpg');
-      background-size: cover; 
-      background-position: center;
-      position: relative;
-      overflow: hidden; 
-    }
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 9999;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+        }
 
-    .rectangle {
-      width: 7cm;
-      height: 13cm;
-      background-color: rgba(128, 128, 128, 0.5); 
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      border-radius: 20px; 
-      overflow: hidden; 
-      animation: expandCircle 2s ease forwards; 
-    }
+        .top-bar .song-control {
+            margin-right: 10px;
+        }
 
-    .top-section {
-      height: 5cm; 
-      overflow: hidden; 
-    }
+        .top-bar .control-button {
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.8));
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 10px;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
 
-    .top-section img {
-      width: 100%; 
-      height: auto; 
-    }
+        .top-bar .song-title {
+            margin-right: 10px;
+            margin-left: 10px;
+            font-size: 20px;
+        }
 
-    .circle-image {
-      width: 2cm; 
-      height: 2cm; 
-      border-radius: 50%; 
-      overflow: hidden; 
-      position: absolute; 
-      bottom: 8cm; 
-      left: 50%; 
-      transform: translateX(-50%); 
-      transition: transform 0.3s ease; 
-    }
+        .container {
+            width: 100%;
+            height: 100vh;
+            background-image: url('https://c4.wallpaperflare.com/wallpaper/916/657/97/anime-your-name-hd-wallpaper-preview.jpg');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+        }
 
-    .circle-image img {
-      width: 100%; 
-      height: auto; 
-    }
+        .rectangle {
+            width: 7cm;
+            height: 13cm;
+            background-color: rgba(128, 128, 128, 0.5);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 20px;
+            overflow: hidden;
+            animation: expandCircle 2s ease forwards;
+        }
 
-    .text-under-circle {
-      position: absolute;
-      bottom: 7.25cm; 
-      left: 50%;
-      transform: translateX(-50%);
-      color: black; 
-      font-size: 1.2rem;
-      font-family: 'Arial';
-      text-align: center; 
-      font-weight: bold; 
-    }
+        .top-section {
+            height: 5cm;
+            overflow: hidden;
+        }
 
-    .social-icons {
-      position: absolute;
-      bottom: 0.5cm; 
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      flex-direction: column; 
-      justify-content: center;
-      align-items: center;
-    }
+        .top-section img {
+            width: 100%;
+            height: auto;
+        }
 
-    .social-icons img {
-      width: 3.5rem; 
-      height: 3.5rem; 
-      border-radius: 50%; 
-      margin: 0.5rem 0; 
-      transition: transform 0.3s ease; 
-    }
+        .circle-image {
+            width: 2cm;
+            height: 2cm;
+            border-radius: 50%;
+            overflow: hidden;
+            position: absolute;
+            bottom: 8cm;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: transform 0.3s ease;
+        }
 
-    .social-icons img:hover {
-      transform: scale(1.1);
-    }
+        .circle-image img {
+            width: 100%;
+            height: auto;
+        }
 
-    .social-icons img:active {
-      transform: scale(0.9); 
-    }
+        .text-under-circle {
+            position: absolute;
+            bottom: 7.25cm;
+            left: 50%;
+            transform: translateX(-50%);
+            color: black;
+            font-size: 1.2rem;
+            font-family: 'Arial';
+            text-align: center;
+            font-weight: bold;
+        }
 
-    .program-button {
-      width: 3cm; 
-      height: 0.7cm; 
-      background-color: black; 
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: white; 
-      margin-top: 0.5rem; 
-      border-radius: 5px; 
-      cursor: pointer; 
-      transition: transform 0.3s ease; 
-    }
+        .social-icons {
+            position: absolute;
+            bottom: 0.5cm;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
 
-    .program-button:hover {
-      transform: scale(1.1);
-    }
+        .social-icons img {
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 50%;
+            margin: 0.5rem 0;
+            transition: transform 0.3s ease;
+        }
 
-    .program-button:active {
-      transform: scale(0.9); 
-    }
+        .social-icons img:hover {
+            transform: scale(1.1);
+        }
 
-    @keyframes expandCircle {
-      0% {
-        width: 2cm;
-        height: 2cm;
-      }
-      100% {
-        width: 7cm;
-        height: 13cm;
-      }
-    }
-  </style>
+        .social-icons img:active {
+            transform: scale(0.9);
+        }
+
+        .program-button {
+            width: 3cm;
+            height: 0.7cm;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            margin-top: 0.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .program-button:hover {
+            transform: scale(1.1);
+        }
+
+        .program-button:active {
+            transform: scale(0.9);
+        }
+        .cursor {
+    width: 20px;
+    height: 20px;
+    border: 1px solid white;
+    border-radius: 50%;
+    position: fixed;
+    transition-duration: 200ms;
+    transition-timing-function: ease-out;
+    animation: cursorAnim .5s infinite alternate;
+    pointer-events: none;
+    z-index: 9999; /* Đảm bảo con trỏ hiển thị trên cùng */
+}
+
+        .cursor::after {
+            content: "";
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            border: 8px solid gray;
+            border-radius: 50%;
+            opacity: .5;
+            top: -8px;
+            left: -8px;
+            animation: cursorAnim2 .5s infinite alternate;
+        }
+
+        @keyframes cursorAnim {
+            from {
+                transform: scale(1);
+            }
+            to {
+                transform: scale(.7);
+            }
+        }
+
+        @keyframes cursorAnim2 {
+            from {
+                transform: scale(1);
+            }
+            to {
+                transform: scale(.4);
+            }
+        }
+
+        @keyframes cursorAnim3 {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(3);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+
+        .expand {
+            animation: cursorAnim3 .5s forwards;
+            border: 1px solid red;
+        }
+        @keyframes expandCircle {
+            0% {
+                width: 2cm;
+                height: 2cm;
+            }
+
+            100% {
+                width: 7cm;
+                height: 13cm;
+            }
+        }
+
+        .control-button {
+            background-color: transparent;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .control-button:hover {
+            transform: scale(1.2);
+        }
+    </style>
 </head>
+
 <body>
+    <div class="top-bar">
+        <button class="control-button" id="prev-button">&lt;</button>
+        <div class="song-title" id="song-title">Music</div>
+        <button class="control-button" id="next-button">&gt;</button>
+    </div>
     <div class="container">
         <div class="rectangle">
             <div class="top-section">
@@ -155,30 +268,51 @@
                     <a href="https://www.facebook.com/HaiDangWibu" target="_blank"><img src="https://i.ibb.co/Twv3PXC/facebook.png" alt="Facebook"></a>
                     <a href="https://www.instagram.com/haidangtl/" target="_blank"><img src="https://i.ibb.co/dkKpfY7/download.jpg" alt="Instagram"></a>
                     <a href="https://www.tiktok.com/@haidang410?_t=8kXI5ykXKbZ&_r=1" target="_blank"><img src="https://i.ibb.co/zH9H86S/tiktok.png" alt="TikTok"></a>
-                    <a href="https://sites.google.com/view/haidangg/trang-ch%E1%BB%A7" target="_blank"><div class="program-button">Program</div></a>
+                    <a href="https://sites.google.com/view/haidangg/trang-ch%E1%BB%A7" target="_blank">
+                        <div class="program-button">Program</div>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
     <script>
-        var audio = new Audio('https://files.catbox.moe/b7fao0.mp3');
-    
-        audio.oncanplay = function() {
+        var audio = new Audio();
+        var currentSongIndex = 0;
+        var songList = [
+            { title: "Tình đắng như ly cà phê🎵", url: "https://files.catbox.moe/8xnm3g.mp3" },
+            { title: "Sài gòn Hôm Nay Mưa🎵", url: "https://files.catbox.moe/b7fao0.mp3" },
+            { title: "Anh đã quen với cô đơn🎵", url: "https://files.catbox.moe/6crau7.mp3" }
+        ];
+
+        var prevButton = document.getElementById('prev-button');
+        var nextButton = document.getElementById('next-button');
+        var songTitle = document.getElementById('song-title');
+
+        function updateSongTitle() {
+            var song = songList[currentSongIndex];
+            songTitle.textContent = song.title;
+            audio.src = song.url;
             audio.play();
-        };
-    
-        audio.loop = true;
-    </script>
-    
-    <script>
-        document.addEventListener('contextmenu', function(e) {
-          e.preventDefault();
+        }
+
+        prevButton.addEventListener('click', function () {
+            currentSongIndex = (currentSongIndex - 1 + songList.length) % songList.length;
+            updateSongTitle();
         });
-      </script>
-      <script>
+
+        nextButton.addEventListener('click', function () {
+            currentSongIndex = (currentSongIndex + 1) % songList.length;
+            updateSongTitle();
+        });
+
+        updateSongTitle();
+    </script>
+
+
+    <script>
         var stop, staticx;
         var img = new Image();
-        img.src = "https://i.imgur.com/R9XUjfF.png";
+        img.src = "https://imgur.com/p7aKBTn.png";
 
         function Sakura(x, y, s, r, fn) {
             this.x = x;
@@ -188,7 +322,7 @@
             this.fn = fn;
         }
 
-        Sakura.prototype.draw = function(cxt) {
+        Sakura.prototype.draw = function (cxt) {
             cxt.save();
             var xc = 40 * this.s / 4;
             cxt.translate(this.x, this.y);
@@ -197,17 +331,17 @@
             cxt.restore();
         }
 
-        Sakura.prototype.update = function() {
+        Sakura.prototype.update = function () {
             this.x = this.fn.x(this.x, this.y);
             this.y = this.fn.y(this.y, this.y);
             this.r = this.fn.r(this.r);
-            if(this.x > window.innerWidth ||
+            if (this.x > window.innerWidth ||
                 this.x < 0 ||
                 this.y > window.innerHeight ||
                 this.y < 0
             ) {
                 this.r = getRandom('fnr');
-                if(Math.random() > 0.4) {
+                if (Math.random() > 0.4) {
                     this.x = getRandom('x');
                     this.y = 0;
                     this.s = getRandom('s');
@@ -221,32 +355,32 @@
             }
         }
 
-        SakuraList = function() {
+        SakuraList = function () {
             this.list = [];
         }
-        SakuraList.prototype.push = function(sakura) {
+        SakuraList.prototype.push = function (sakura) {
             this.list.push(sakura);
         }
-        SakuraList.prototype.update = function() {
-            for(var i = 0, len = this.list.length; i < len; i++) {
+        SakuraList.prototype.update = function () {
+            for (var i = 0, len = this.list.length; i < len; i++) {
                 this.list[i].update();
             }
         }
-        SakuraList.prototype.draw = function(cxt) {
-            for(var i = 0, len = this.list.length; i < len; i++) {
+        SakuraList.prototype.draw = function (cxt) {
+            for (var i = 0, len = this.list.length; i < len; i++) {
                 this.list[i].draw(cxt);
             }
         }
-        SakuraList.prototype.get = function(i) {
+        SakuraList.prototype.get = function (i) {
             return this.list[i];
         }
-        SakuraList.prototype.size = function() {
+        SakuraList.prototype.size = function () {
             return this.list.length;
         }
 
         function getRandom(option) {
             var ret, random;
-            switch(option) {
+            switch (option) {
                 case 'x':
                     ret = Math.random() * window.innerWidth;
                     break;
@@ -261,19 +395,19 @@
                     break;
                 case 'fnx':
                     random = -0.5 + Math.random() * 1;
-                    ret = function(x, y) {
+                    ret = function (x, y) {
                         return x + 0.5 * random - 1;
                     };
                     break;
                 case 'fny':
                     random = 0.5 + Math.random() * 0.5
-                    ret = function(x, y) {
+                    ret = function (x, y) {
                         return y + random;
                     };
                     break;
                 case 'fnr':
                     random = Math.random() * 0.01;
-                    ret = function(r) {
+                    ret = function (r) {
                         return r + random;
                     };
                     break;
@@ -298,7 +432,7 @@
             document.getElementsByTagName('body')[0].appendChild(canvas);
             cxt = canvas.getContext('2d');
             var sakuraList = new SakuraList();
-            for(var i = 0; i < 50; i++) {
+            for (var i = 0; i < 50; i++) {
                 var sakura, randomX, randomY, randomS, randomR, randomFnx, randomFny;
                 randomX = getRandom('x');
                 randomY = getRandom('y');
@@ -315,7 +449,7 @@
                 sakura.draw(cxt);
                 sakuraList.push(sakura);
             }
-            stop = requestAnimationFrame(function() {
+            stop = requestAnimationFrame(function () {
                 cxt.clearRect(0, 0, canvas.width, canvas.height);
                 sakuraList.update();
                 sakuraList.draw(cxt);
@@ -323,18 +457,18 @@
             })
         }
 
-        window.onresize = function() {
+        window.onresize = function () {
             var canvasSnow = document.getElementById('canvas_snow');
             canvasSnow.width = window.innerWidth;
             canvasSnow.height = window.innerHeight;
         }
 
-        img.onload = function() {
+        img.onload = function () {
             startSakura();
         }
 
         function stopp() {
-            if(staticx) {
+            if (staticx) {
                 var child = document.getElementById("canvas_sakura");
                 child.parentNode.removeChild(child);
                 window.cancelAnimationFrame(stop);
@@ -344,6 +478,50 @@
             }
         }
     </script>
-
 </body>
+
 </html>
+<script>
+    var songPlayed = false;
+
+    function playSong() {
+        if (!songPlayed) {
+            updateSongTitle();
+            songPlayed = true;
+        }
+    }
+
+    document.body.addEventListener('click', playSong);
+</script>
+<script>
+    document.addEventListener("keydown", function (event){
+        if (event.ctrlKey){
+           event.preventDefault();
+        }
+        if(event.keyCode == 123){
+           event.preventDefault();
+        }
+    });
+    </script>
+    <script>
+        document.addEventListener('contextmenu', function(e) {
+          e.preventDefault();
+        });
+      </script>
+    <script>
+        const cursor = document.createElement('div');
+        cursor.classList.add('cursor');
+        document.body.appendChild(cursor);
+
+        document.addEventListener('mousemove', e => {
+            cursor.style.top = `${e.pageY - 10}px`;
+            cursor.style.left = `${e.pageX - 10}px`;
+        });
+
+        document.addEventListener('click', () => {
+            cursor.classList.add("expand");
+            setTimeout(() => {
+                cursor.classList.remove("expand");
+            }, 500)
+        });
+    </script>
