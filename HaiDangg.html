@@ -304,10 +304,16 @@
             currentSongIndex = (currentSongIndex + 1) % songList.length;
             updateSongTitle();
         });
-
+        audio.addEventListener('ended', function() {
+            updateSongTitle();
+        });
         updateSongTitle();
+
     </script>
 
+    <script> 
+    
+    </script>
 
     <script>
         var stop, staticx;
