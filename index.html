@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hải Đăng</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico"> <!-- Thêm favicon -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
@@ -81,7 +81,7 @@
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            background-image: url('tao.png'); /* Sử dụng file cục bộ */
+            background-image: url('https://files.catbox.moe/h8hhvy.png');
             background-size: cover;
             border: 2px solid #1c0b2b;
             position: relative;
@@ -680,11 +680,41 @@
         const volumeSlider = document.querySelector('.volume-slider');
 
         const playlist = [
-            { title: "Đừng Xa Anh Nhé", src: "Đừng Xa Anh Nhé.mp3" }, /* Thay bằng file MP3 cục bộ */
-            { title: "Wrong Times", src: "Wrong Times.mp3" },          /* Thay bằng file MP3 cục bộ */
-            { title: "NắngCóMangEmVề", src: "Nắng có mang em về.mp3" }           /* Thay bằng file MP3 cục bộ */
+            { title: "Đừng Xa Anh Nhé", src: "Đừng Xa Anh Nhé.mp3" },
+            { title: "Wrong Times", src: "Wrong Times.mp3" },
+            { title: "NắngCóMangEmVề", src: "Nắng có mang em về.mp3" }
         ];
         let currentTrackIndex = 0;
+
+// Chặn chuột phải
+document.addEventListener("contextmenu", function (e) {
+    e.preventDefault();
+    alert("huhu");
+});
+
+// Chặn các tổ hợp phím nguy hiểm
+document.addEventListener("keydown", function (e) {
+    // Danh sách các tổ hợp phím cần chặn
+    if (
+        (e.ctrlKey && e.key.toLowerCase() === "u") || // Ctrl + U
+        (e.ctrlKey && e.key.toLowerCase() === "i") || // Ctrl + I
+        (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "i") || // Ctrl + Shift + I
+        (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "j") || // Ctrl + Shift + J
+        (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "c") || // Ctrl + Shift + C (Inspect Element)
+        (e.ctrlKey && e.key.toLowerCase() === "s") || // Ctrl + S (Lưu trang)
+        (e.ctrlKey && e.key.toLowerCase() === "h") || // Ctrl + H (Lịch sử)
+        (e.ctrlKey && e.key.toLowerCase() === "p") || // Ctrl + P (In trang)
+        (e.key.toLowerCase() === "f12") || // F12
+        (e.ctrlKey && e.key.toLowerCase() === "f") || // Ctrl + F (Tìm kiếm)
+        (e.ctrlKey && e.key.toLowerCase() === "e") // Ctrl + E (Mở DevTools trong một số trình duyệt)
+    ) {
+        e.preventDefault();
+        alert("Dừng lại đi bé!");
+        return;
+    }
+});
+
+
 
         function playSound() {
             gunshot.play();
