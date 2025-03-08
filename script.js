@@ -42,24 +42,6 @@ document.addEventListener("contextmenu", function (e) {
 });
 
 
-(function() {
-    let devtoolsOpen = false;
-    setInterval(() => {
-        if ((window.outerWidth - window.innerWidth > 100) || (window.outerHeight - window.innerHeight > 100)) {
-            if (!devtoolsOpen) {
-                devtoolsOpen = true;
-                alert("Đừng có lén xem source nha! Đóng DevTools lại đi!");
-
-                document.body.style.display = 'none';
-                setTimeout(() => {
-                    document.body.style.display = 'block';
-                }, 100);
-            }
-        } else {
-            devtoolsOpen = false;
-        }
-    }, 500);
-})();
 
 
 function playSound() {
