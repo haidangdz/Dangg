@@ -42,7 +42,6 @@ document.addEventListener("contextmenu", function (e) {
     alert("huhu");
 });
 
-
 // Hàm chính
 function playSound() {
     gunshot.play();
