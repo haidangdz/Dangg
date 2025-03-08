@@ -39,7 +39,7 @@
                     </div>
                     <div class="visitor-counter">
                         <i class="fas fa-eye"></i>
-                        <span class="visitor-count"><?php include 'visitor_counter.php'; ?></span>
+                        <span class="visitor-count"><?php include 'visitor_counter.php'; ?></span> views
                     </div>
                 </div>
             </div>
