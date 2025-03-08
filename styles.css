@@ -721,4 +721,34 @@ h1 {
     .qr-text {
         font-size: 0.9em;
     }
+    .visitor-counter {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+        padding: 8px 12px;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.2);
+        animation: holoGlow 2s infinite alternate;
+    }
+    
+    .visitor-counter i {
+        font-size: 1.5em;
+        color: #00faff;
+        text-shadow: 0 0 10px rgba(0, 250, 255, 0.7);
+    }
+    
+    .visitor-counter .visitor-count {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #ff00ff;
+        text-shadow: 0 0 10px rgba(255, 0, 255, 0.7);
+    }
+    
+    .visitor-counter span:last-child {
+        font-size: 1em;
+        color: #ddd;
+    }
 }
