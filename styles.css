@@ -136,10 +136,10 @@ h1 {
     color: #ddd;
     white-space: nowrap;
     border-right: 2px solid #fff;
-    animation: blink 0.5s step-end infinite;
+    animation: blinkBorder 0.5s step-end infinite; /* Đổi tên animation để tránh xung đột */
 }
 
-@keyframes blink {
+@keyframes blinkBorder { /* Đổi tên thành blinkBorder */
     50% { border-color: transparent; }
 }
 
@@ -235,10 +235,10 @@ h1 {
     font-size: 2em;
     color: #fff;
     text-shadow: 2px 2px 4px #000;
-    animation: blink 1s step-end infinite;
+    animation: blinkOpacity 1s step-end infinite; /* Đổi tên thành blinkOpacity */
 }
 
-@keyframes blink {
+@keyframes blinkOpacity { /* Đổi tên thành blinkOpacity */
     50% { opacity: 0; }
 }
 
