@@ -19,6 +19,7 @@ const playlist = [
 ];
 let currentTrackIndex = 0;
 
+// Chặn các tổ hợp phím và nút liên quan đến xem source
 document.onkeydown = function(e) {
     if (
         (e.ctrlKey && e.key.toLowerCase() === "u") || 
@@ -35,15 +36,32 @@ document.onkeydown = function(e) {
     }
 };
 
-
+// Chặn chuột phải
 document.addEventListener("contextmenu", function (e) {
     e.preventDefault();
     alert("huhu");
 });
 
+// Phát hiện và làm rối khi mở DevTools
+(function() {
+    let devtoolsOpen = false;
+    setInterval(() => {
+        if ((window.outerWidth - window.innerWidth > 100) || (window.outerHeight - window.innerHeight > 100)) {
+            if (!devtoolsOpen) {
+                devtoolsOpen = true;
+                alert("Đừng có lén xem source nha! Đóng DevTools lại đi!");
+                document.body.style.display = 'none';
+                setTimeout(() => {
+                    document.body.style.display = 'block';
+                }, 100);
+            }
+        } else {
+            devtoolsOpen = false;
+        }
+    }, 500);
+})();
 
-
-
+// Hàm chính
 function playSound() {
     gunshot.play();
     overlay.style.opacity = '0';
@@ -114,7 +132,7 @@ function type() {
 
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(type, 1000);
-    loadTrack(currentTrackIndex);
+    // Bỏ loadTrack(currentTrackIndex) tại đây để nhạc không tự phát khi tải trang
 });
 
 function loadTrack(index) {
