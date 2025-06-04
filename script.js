@@ -13,9 +13,8 @@ const volumeIcon = document.querySelector('.volume-icon');
 const volumeSlider = document.querySelector('.volume-slider');
 
 const playlist = [
-    { title: "Đừng Xa Anh Nhé", src: "Đừng Xa Anh Nhé.mp3" },
-    { title: "Wrong Times", src: "Wrong Times.mp3" },
-    { title: "NắngCóMangEmVề", src: "Nắng có mang em về.mp3" }
+    { title: "Comfort Chain", src: "Comfort Chain.mp3" },
+    { title: "Are You Lost?", src: "Are You Lost.mp3" },
 ];
 let currentTrackIndex = 0;
 
@@ -113,7 +112,6 @@ function type() {
 
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(type, 1000);
-    // Bỏ loadTrack(currentTrackIndex) tại đây để nhạc không tự phát khi tải trang
 });
 
 function loadTrack(index) {
