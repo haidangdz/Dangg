@@ -10,6 +10,10 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <video class="background-video" autoplay muted loop>
+        <source src="BG.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
     <div class="overlay" onclick="playSound()">
         <div class="overlay-text">CLICK...</div>
     </div>
@@ -68,7 +72,7 @@
             <input type="range" class="volume-slider" min="0" max="1" step="0.01" value="1">
         </div>
         <div class="qr-container" onclick="toggleQR()">
-            <i class="fas fa-qrcode" style="font-size: 1.5em; color: #00faff;"></i>
+            <i class="fas fa-qrcode"></i>
         </div>
         <div class="qr-popup" id="qrPopup" style="display: none;">
             <div class="qr-content">
