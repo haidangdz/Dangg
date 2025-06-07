@@ -13,8 +13,10 @@ const volumeIcon = document.querySelector('.volume-icon');
 const volumeSlider = document.querySelector('.volume-slider');
 
 const playlist = [
+    { title: "School Rooftop", src: "School Rooftop.mp3" },
     { title: "Comfort Chain", src: "Comfort Chain.mp3" },
     { title: "Are You Lost?", src: "Are You Lost.mp3" },
+    { title: "snowfall", src: "snowfall.mp3" },
 ];
 let currentTrackIndex = 0;
 
