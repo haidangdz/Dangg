@@ -395,6 +395,8 @@ export function AdminPanel({
                       title: "New track",
                       artist: "Unknown artist",
                       url: "",
+                      lyrics: "No lyrics added yet",
+                      lrcUrl: "",
                     },
                   ])
                 }
@@ -439,6 +441,23 @@ export function AdminPanel({
                       placeholder="https://…"
                       onChange={(event) =>
                         updateTrack(track.id, { url: event.target.value })
+                      }
+                    />
+                    <textarea
+                      aria-label="Track lyrics"
+                      value={track.lyrics}
+                      placeholder="One lyric line per row"
+                      rows={3}
+                      onChange={(event) =>
+                        updateTrack(track.id, { lyrics: event.target.value })
+                      }
+                    />
+                    <input
+                      aria-label="Timed lyrics URL"
+                      value={track.lrcUrl}
+                      placeholder="LRC URL (optional)"
+                      onChange={(event) =>
+                        updateTrack(track.id, { lrcUrl: event.target.value })
                       }
                     />
                     <label className="mini-upload">

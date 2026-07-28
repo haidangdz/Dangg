@@ -14,6 +14,8 @@ export type MusicTrack = {
   title: string;
   artist: string;
   url: string;
+  lyrics: string;
+  lrcUrl: string;
 };
 
 export type ProfileConfig = {
@@ -40,9 +42,10 @@ export const defaultProfile: ProfileConfig = {
   bio: "building games, collecting late-night songs & leaving a little glow online.",
   location: "Da Nang, Vietnam",
   status: "online",
-  avatarUrl: "",
-  backgroundType: "gradient",
-  backgroundUrl: "",
+  avatarUrl: "/avatar/haidang-night.png",
+  backgroundType: "image",
+  backgroundUrl:
+    "https://images.unsplash.com/photo-1770293798830-b48cb04bd377?auto=format&fit=crop&fm=jpg&q=85&w=2400",
   accentColor: "#a78bfa",
   cardOpacity: 0.56,
   blur: 24,
@@ -71,7 +74,32 @@ export const defaultProfile: ProfileConfig = {
       visible: true,
     },
   ],
-  tracks: [],
+  tracks: [
+    {
+      id: "ha-noi",
+      title: "Hà Nội",
+      artist: "Obito, Shiki & VSTRA",
+      url: "/music/ha-noi.mp3",
+      lyrics: "",
+      lrcUrl: "/music/ha-noi.lrc",
+    },
+    {
+      id: "anh-sao-va-bau-troi",
+      title: "Ánh Sao Và Bầu Trời",
+      artist: "T.R.I",
+      url: "/music/anh-sao-va-bau-troi.mp3",
+      lyrics: "",
+      lrcUrl: "/music/anh-sao-va-bau-troi.lrc",
+    },
+    {
+      id: "neu-ngay-ay",
+      title: "Nếu Ngày Ấy",
+      artist: "SOOBIN",
+      url: "/music/neu-ngay-ay.mp3",
+      lyrics: "",
+      lrcUrl: "/music/neu-ngay-ay.lrc",
+    },
+  ],
 };
 
 type RuntimeEnv = {
@@ -81,6 +109,34 @@ type RuntimeEnv = {
 
 export function runtimeEnv(): RuntimeEnv {
   return env as unknown as RuntimeEnv;
+}
+
+async function ensureDatabaseSchema(db: D1Database): Promise<void> {
+  await db.batch([
+    db.prepare(`CREATE TABLE IF NOT EXISTS profile_config (
+      id TEXT PRIMARY KEY NOT NULL,
+      data TEXT NOT NULL,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
+    )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS profile_stats (
+      profile_id TEXT PRIMARY KEY NOT NULL,
+      views INTEGER DEFAULT 0 NOT NULL,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
+    )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS site_owner (
+      id INTEGER PRIMARY KEY,
+      email TEXT NOT NULL,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
+    )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS media_assets (
+      id TEXT PRIMARY KEY NOT NULL,
+      object_key TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      content_type TEXT NOT NULL,
+      size INTEGER NOT NULL,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
+    )`),
+  ]);
 }
 
 function normalizeConfig(input: unknown): ProfileConfig {
@@ -136,6 +192,8 @@ function normalizeTrack(value: Partial<MusicTrack>, index: number): MusicTrack {
     title: cleanText(value.title, `Track ${index + 1}`, 80),
     artist: cleanText(value.artist, "Unknown artist", 80),
     url: cleanUrl(value.url),
+    lyrics: cleanText(value.lyrics, "No lyrics added yet", 600),
+    lrcUrl: cleanUrl(value.lrcUrl),
   };
 }
 
@@ -151,7 +209,7 @@ function cleanText(
 function cleanUrl(value: unknown): string {
   if (typeof value !== "string" || !value.trim()) return "";
   const url = value.trim().slice(0, 1600);
-  if (url.startsWith("/api/assets/")) return url;
+  if (url.startsWith("/") && !url.startsWith("//")) return url;
   try {
     const parsed = new URL(url);
     return ["http:", "https:"].includes(parsed.protocol) ? parsed.toString() : "";
@@ -178,6 +236,7 @@ export async function getProfile(): Promise<{
 }> {
   const db = runtimeEnv().DB;
   if (!db) return { config: defaultProfile, views: 0 };
+  await ensureDatabaseSchema(db);
 
   const [configRow, statsRow] = await db.batch([
     db.prepare("SELECT data FROM profile_config WHERE id = ?").bind("main"),
@@ -203,6 +262,7 @@ export async function getProfile(): Promise<{
 export async function saveProfile(input: unknown): Promise<ProfileConfig> {
   const db = runtimeEnv().DB;
   if (!db) throw new Error("Database is unavailable.");
+  await ensureDatabaseSchema(db);
   const config = normalizeConfig(input);
   await db
     .prepare(
@@ -220,6 +280,7 @@ export async function saveProfile(input: unknown): Promise<ProfileConfig> {
 export async function requireOwner(user: ChatGPTUser): Promise<void> {
   const db = runtimeEnv().DB;
   if (!db) throw new Error("Database is unavailable.");
+  await ensureDatabaseSchema(db);
 
   await db
     .prepare(
@@ -241,6 +302,7 @@ export async function requireOwner(user: ChatGPTUser): Promise<void> {
 export async function incrementViews(): Promise<number> {
   const db = runtimeEnv().DB;
   if (!db) return 0;
+  await ensureDatabaseSchema(db);
 
   await db
     .prepare(
