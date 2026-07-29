@@ -1,8 +1,14 @@
 import { env } from "cloudflare:workers";
 import type { ChatGPTUser } from "@/app/chatgpt-auth";
+import {
+  inferSocialIcon,
+  isSocialIconId,
+  type SocialIconId,
+} from "@/lib/social-icons";
 
 export type ProfileLink = {
   id: string;
+  icon: SocialIconId;
   label: string;
   url: string;
   subtitle: string;
@@ -18,13 +24,24 @@ export type MusicTrack = {
   lrcUrl: string;
 };
 
+export type AvatarFrame =
+  | "glitch"
+  | "halo"
+  | "frost"
+  | "eclipse"
+  | "ember";
+
+export type DiscordBadgeId = "legacy" | "quest" | "nitro";
+
 export type ProfileConfig = {
   displayName: string;
   handle: string;
   bio: string;
+  bioMessages: string[];
   location: string;
   status: string;
   avatarUrl: string;
+  avatarFrame: AvatarFrame;
   backgroundType: "gradient" | "image" | "video";
   backgroundUrl: string;
   accentColor: string;
@@ -32,6 +49,10 @@ export type ProfileConfig = {
   blur: number;
   showViews: boolean;
   musicEnabled: boolean;
+  discordPresenceEnabled: boolean;
+  discordUserId: string;
+  discordProfileUrl: string;
+  discordBadgeIds: DiscordBadgeId[];
   links: ProfileLink[];
   tracks: MusicTrack[];
 };
@@ -39,21 +60,31 @@ export type ProfileConfig = {
 export const defaultProfile: ProfileConfig = {
   displayName: "Hải Đăng",
   handle: "@haidang",
-  bio: "building games, collecting late-night songs & leaving a little glow online.",
+  bio: "Trying to better my self",
+  bioMessages: [
+    "I love You",
+    "Family, Money, Car, Game, Music, Immersed in a dream world",
+    "Trying to better my self",
+  ],
   location: "Da Nang, Vietnam",
   status: "online",
   avatarUrl: "/avatar/haidang-night.png",
-  backgroundType: "image",
-  backgroundUrl:
-    "https://images.unsplash.com/photo-1770293798830-b48cb04bd377?auto=format&fit=crop&fm=jpg&q=85&w=2400",
+  avatarFrame: "glitch",
+  backgroundType: "video",
+  backgroundUrl: "/media/background.mp4",
   accentColor: "#a78bfa",
   cardOpacity: 0.56,
   blur: 24,
   showViews: true,
   musicEnabled: true,
+  discordPresenceEnabled: false,
+  discordUserId: "",
+  discordProfileUrl: "",
+  discordBadgeIds: ["legacy", "quest", "nitro"],
   links: [
     {
       id: "facebook",
+      icon: "facebook",
       label: "Facebook",
       subtitle: "Follow my daily life",
       url: "https://www.facebook.com/haridangw",
@@ -61,6 +92,7 @@ export const defaultProfile: ProfileConfig = {
     },
     {
       id: "instagram",
+      icon: "instagram",
       label: "Instagram",
       subtitle: "Photos & moments",
       url: "https://www.instagram.com/_.haridawng",
@@ -68,6 +100,7 @@ export const defaultProfile: ProfileConfig = {
     },
     {
       id: "tiktok",
+      icon: "tiktok",
       label: "TikTok",
       subtitle: "Short-form chaos",
       url: "https://www.tiktok.com/@_haridawng",
@@ -151,9 +184,15 @@ function normalizeConfig(input: unknown): ProfileConfig {
     displayName: cleanText(value.displayName, defaultProfile.displayName, 80),
     handle: cleanText(value.handle, defaultProfile.handle, 40),
     bio: cleanText(value.bio, defaultProfile.bio, 240),
+    bioMessages: normalizeBioMessages(value.bioMessages, value.bio),
     location: cleanText(value.location, defaultProfile.location, 80),
     status: cleanText(value.status, defaultProfile.status, 40),
     avatarUrl: cleanUrl(value.avatarUrl),
+    avatarFrame: ["glitch", "halo", "frost", "eclipse", "ember"].includes(
+      value.avatarFrame ?? "",
+    )
+      ? (value.avatarFrame as AvatarFrame)
+      : defaultProfile.avatarFrame,
     backgroundUrl: cleanUrl(value.backgroundUrl),
     backgroundType: ["gradient", "image", "video"].includes(
       value.backgroundType ?? "",
@@ -167,8 +206,12 @@ function normalizeConfig(input: unknown): ProfileConfig {
     blur: clampNumber(value.blur, 8, 42, 24),
     showViews: value.showViews !== false,
     musicEnabled: value.musicEnabled !== false,
+    discordPresenceEnabled: value.discordPresenceEnabled === true,
+    discordUserId: cleanDiscordUserId(value.discordUserId),
+    discordProfileUrl: cleanUrl(value.discordProfileUrl),
+    discordBadgeIds: normalizeDiscordBadgeIds(value.discordBadgeIds),
     links: Array.isArray(value.links)
-      ? value.links.slice(0, 12).map(normalizeLink)
+      ? value.links.slice(0, 24).map(normalizeLink)
       : defaultProfile.links,
     tracks: Array.isArray(value.tracks)
       ? value.tracks.slice(0, 12).map(normalizeTrack).filter((track) => track.url)
@@ -176,12 +219,47 @@ function normalizeConfig(input: unknown): ProfileConfig {
   };
 }
 
+function normalizeDiscordBadgeIds(value: unknown): DiscordBadgeId[] {
+  const allowed = new Set<DiscordBadgeId>(["legacy", "quest", "nitro"]);
+  if (!Array.isArray(value)) return defaultProfile.discordBadgeIds;
+  return [
+    ...new Set(
+      value.filter(
+        (item): item is DiscordBadgeId =>
+          typeof item === "string" && allowed.has(item as DiscordBadgeId),
+      ),
+    ),
+  ].slice(0, 3);
+}
+
+function normalizeBioMessages(
+  value: unknown,
+  legacyBio: unknown,
+): string[] {
+  if (Array.isArray(value)) {
+    const messages = value
+      .slice(0, 8)
+      .map((item) => cleanText(item, "", 180))
+      .filter(Boolean);
+    if (messages.length) return messages;
+  }
+  if (typeof legacyBio === "string" && legacyBio.trim()) {
+    return [legacyBio.trim().slice(0, 180)];
+  }
+  return defaultProfile.bioMessages;
+}
+
 function normalizeLink(value: Partial<ProfileLink>, index: number): ProfileLink {
+  const label = cleanText(value.label, `Link ${index + 1}`, 50);
+  const url = cleanUrl(value.url);
   return {
     id: cleanText(value.id, crypto.randomUUID(), 80),
-    label: cleanText(value.label, `Link ${index + 1}`, 50),
+    icon: isSocialIconId(value.icon)
+      ? value.icon
+      : inferSocialIcon(label, url),
+    label,
     subtitle: cleanText(value.subtitle, "", 80),
-    url: cleanUrl(value.url),
+    url,
     visible: value.visible !== false,
   };
 }
@@ -192,7 +270,11 @@ function normalizeTrack(value: Partial<MusicTrack>, index: number): MusicTrack {
     title: cleanText(value.title, `Track ${index + 1}`, 80),
     artist: cleanText(value.artist, "Unknown artist", 80),
     url: cleanUrl(value.url),
-    lyrics: cleanText(value.lyrics, "No lyrics added yet", 600),
+    lyrics:
+      typeof value.lyrics === "string" &&
+      value.lyrics.trim() !== "No lyrics added yet"
+        ? value.lyrics.trim().slice(0, 12000)
+        : "",
     lrcUrl: cleanUrl(value.lrcUrl),
   };
 }
@@ -212,10 +294,18 @@ function cleanUrl(value: unknown): string {
   if (url.startsWith("/") && !url.startsWith("//")) return url;
   try {
     const parsed = new URL(url);
-    return ["http:", "https:"].includes(parsed.protocol) ? parsed.toString() : "";
+    return ["http:", "https:", "mailto:"].includes(parsed.protocol)
+      ? parsed.toString()
+      : "";
   } catch {
     return "";
   }
+}
+
+function cleanDiscordUserId(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const id = value.trim();
+  return /^\d{15,22}$/.test(id) ? id : "";
 }
 
 function clampNumber(

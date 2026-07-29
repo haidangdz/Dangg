@@ -9,6 +9,7 @@ test("ships the profile and admin routes", async () => {
     fs.readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8"),
   );
   assert.match(page, /ProfileClient/);
-  assert.match(admin, /requireChatGPTUser/);
+  assert.match(admin, /verifyAdminSession/);
+  assert.match(admin, /ADMIN_COOKIE_NAME/);
   assert.match(admin, /AdminPanel/);
 });

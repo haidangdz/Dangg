@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ProfileConfig } from "@/lib/profile";
+import { socialIcon } from "@/lib/social-icons";
+import { SocialIcon } from "@/app/social-icon";
+import { DiscordPresenceCard } from "@/app/discord-presence-card";
 
 type Props = {
   initialProfile: { config: ProfileConfig; views: number };
@@ -22,6 +25,7 @@ type PetMood =
   | "landing";
 
 type PetSkin = "classic" | "wuxiang";
+type SecretStage = "hidden" | "reveal-code" | "revealed" | "admin-password";
 
 type PetAttack = {
   id: number;
@@ -33,12 +37,6 @@ type PetAttack = {
   dx: number;
   dy: number;
 };
-
-const BIO_MESSAGES = [
-  "I love You",
-  "Family, Money, Car, Game, Music, Immersed in a dream world",
-  "Trying to better my self",
-];
 
 function parseLrc(source: string): LyricLine[] {
   const lines: LyricLine[] = [];
@@ -62,16 +60,6 @@ function formatTime(value: number) {
 
 function initials(name: string) {
   return name.split(/\s+/).slice(-2).map((part) => part[0]).join("").toUpperCase();
-}
-
-function socialMark(label: string) {
-  const value = label.toLowerCase();
-  if (value.includes("facebook")) return "f";
-  if (value.includes("instagram")) return "◎";
-  if (value.includes("tiktok")) return "♪";
-  if (value.includes("discord")) return "◖◗";
-  if (value.includes("github")) return "⌘";
-  return "↗";
 }
 
 function findNearbyPetTarget(x: number, y: number) {
@@ -132,22 +120,37 @@ export function ProfileClient({ initialProfile }: Props) {
   const [petAttack, setPetAttack] = useState<PetAttack | null>(null);
   const [petSkin, setPetSkin] = useState<PetSkin>("classic");
   const [mobileMusicVisible, setMobileMusicVisible] = useState(false);
+  const [secretStage, setSecretStage] = useState<SecretStage>("hidden");
+  const [secretValue, setSecretValue] = useState("");
+  const [secretError, setSecretError] = useState("");
+  const [secretSubmitting, setSecretSubmitting] = useState(false);
   const petMoodRef = useRef<PetMood>("idle");
   const petPositionRef = useRef(petPosition);
   const petActionTimerRef = useRef<number | null>(null);
+  const avatarTapCountRef = useRef(0);
+  const avatarTapTimerRef = useRef<number | null>(null);
   const lastVolumeRef = useRef(0.7);
   const petDragRef = useRef({ active: false, moved: false, offsetX: 0, offsetY: 0 });
   const activeTrack = config.tracks[trackIndex];
   const spotifyTrack = activeTrack?.url.includes("open.spotify.com/embed/");
   const visibleLinks = config.links.filter((link) => link.visible && link.url);
   const avatarUrl = config.avatarUrl || "/avatar/haidang-night.png";
-
-  const backgroundStyle = useMemo(
-    () => config.backgroundType === "image" && config.backgroundUrl
+  const bioMessages = config.bioMessages.length
+    ? config.bioMessages
+    : [config.bio];
+  const gateBackgroundStyle =
+    config.backgroundType === "image" && config.backgroundUrl
       ? { backgroundImage: `url("${config.backgroundUrl}")` }
-      : undefined,
-    [config.backgroundType, config.backgroundUrl],
-  );
+      : undefined;
+  const profileBackgroundStyle =
+    config.backgroundType === "image" && config.backgroundUrl
+      ? { backgroundImage: `url("${config.backgroundUrl}")` }
+      : config.backgroundType === "gradient"
+        ? {
+            backgroundImage:
+              "radial-gradient(circle at 28% 18%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 34rem), linear-gradient(135deg, #06070b, #100c18 52%, #030406)",
+          }
+        : undefined;
 
   useEffect(() => {
     if (!entered) return;
@@ -163,7 +166,7 @@ export function ProfileClient({ initialProfile }: Props) {
     setTypedBio("");
 
     const typeNext = () => {
-      const phrase = BIO_MESSAGES[phraseIndex];
+      const phrase = bioMessages[phraseIndex];
 
       if (!deleting) {
         characterIndex += 1;
@@ -181,7 +184,7 @@ export function ProfileClient({ initialProfile }: Props) {
       setTypedBio(phrase.slice(0, Math.max(0, characterIndex)));
       if (characterIndex <= 0) {
         deleting = false;
-        phraseIndex = (phraseIndex + 1) % BIO_MESSAGES.length;
+        phraseIndex = (phraseIndex + 1) % bioMessages.length;
         typingTimer = window.setTimeout(typeNext, 380);
       } else {
         typingTimer = window.setTimeout(typeNext, 27);
@@ -192,7 +195,7 @@ export function ProfileClient({ initialProfile }: Props) {
     return () => {
       if (typingTimer !== null) window.clearTimeout(typingTimer);
     };
-  }, [entered]);
+  }, [bioMessages, entered]);
 
   useEffect(() => {
     if (!entered) return;
@@ -302,6 +305,25 @@ export function ProfileClient({ initialProfile }: Props) {
   }, []);
 
   useEffect(() => {
+    const preventSelectAll = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a") {
+        event.preventDefault();
+      }
+    };
+    document.addEventListener("keydown", preventSelectAll);
+    return () => document.removeEventListener("keydown", preventSelectAll);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (avatarTapTimerRef.current !== null) {
+        window.clearTimeout(avatarTapTimerRef.current);
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
     if (!entered || !petReady) return;
     let cycle = 0;
     let wakeTimer: number | null = null;
@@ -407,9 +429,98 @@ export function ProfileClient({ initialProfile }: Props) {
     });
   };
 
+  const handleAvatarSecret = () => {
+    if (secretStage === "revealed") {
+      setSecretValue("");
+      setSecretError("");
+      setSecretStage("admin-password");
+      return;
+    }
+    if (secretStage !== "hidden") return;
+
+    avatarTapCountRef.current += 1;
+    if (avatarTapTimerRef.current !== null) {
+      window.clearTimeout(avatarTapTimerRef.current);
+    }
+    avatarTapTimerRef.current = window.setTimeout(() => {
+      avatarTapCountRef.current = 0;
+    }, 5000);
+
+    if (avatarTapCountRef.current >= 10) {
+      avatarTapCountRef.current = 0;
+      if (avatarTapTimerRef.current !== null) {
+        window.clearTimeout(avatarTapTimerRef.current);
+      }
+      setSecretValue("");
+      setSecretError("");
+      setSecretStage("reveal-code");
+    }
+  };
+
+  const closeSecretDialog = () => {
+    if (secretSubmitting) return;
+    setSecretValue("");
+    setSecretError("");
+    setSecretStage(
+      secretStage === "admin-password" ? "revealed" : "hidden",
+    );
+  };
+
+  const submitSecret = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (
+      secretStage !== "reveal-code" &&
+      secretStage !== "admin-password"
+    ) {
+      return;
+    }
+
+    const endpoint =
+      secretStage === "reveal-code"
+        ? "/api/admin/reveal"
+        : "/api/admin/login";
+    const currentStage = secretStage;
+    setSecretSubmitting(true);
+    setSecretError("");
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: secretValue }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.error || "Không thể mở khóa.");
+      }
+
+      if (currentStage === "reveal-code") {
+        setSecretStage("revealed");
+        setSecretValue("");
+      } else {
+        window.location.assign("/admin");
+      }
+    } catch (error) {
+      setSecretError(
+        error instanceof Error ? error.message : "Không thể mở khóa.",
+      );
+      setSecretValue("");
+    } finally {
+      setSecretSubmitting(false);
+    }
+  };
+
   if (!entered) {
     return (
-      <main className="hd-gate" style={{ "--accent": config.accentColor, ...backgroundStyle } as React.CSSProperties}>
+      <main
+        className="hd-gate"
+        style={
+          {
+            "--accent": config.accentColor,
+            ...gateBackgroundStyle,
+          } as React.CSSProperties
+        }
+      >
         <div className="hd-gate-shade" />
         <div className="hd-grain" />
         <button onClick={enterProfile} className="hd-enter">
@@ -428,7 +539,7 @@ export function ProfileClient({ initialProfile }: Props) {
         "--accent": config.accentColor,
         "--card-opacity": config.cardOpacity,
         "--card-blur": `${config.blur}px`,
-        ...backgroundStyle,
+        ...profileBackgroundStyle,
       } as React.CSSProperties}
       onPointerMove={(event) => {
         const root = rootRef.current;
@@ -440,7 +551,16 @@ export function ProfileClient({ initialProfile }: Props) {
       }}
     >
       {config.backgroundType === "video" && config.backgroundUrl ? (
-        <video className="hd-video" src={config.backgroundUrl} autoPlay muted loop playsInline />
+        <video
+          className="hd-video"
+          src={config.backgroundUrl}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          disablePictureInPicture
+        />
       ) : null}
       <div className="hd-backdrop" />
       <div className="hd-grain" />
@@ -455,55 +575,105 @@ export function ProfileClient({ initialProfile }: Props) {
       <section id="profile" className="hd-panel hd-hero hd-seen" data-section="0">
         <div className="hd-hero-ghost" aria-hidden="true">{config.displayName}</div>
         <div className="hd-widget-layout">
-          <article className="hd-profile">
-            <div className="hd-profile-line" />
-            <div className="hd-avatar">
-              <div className="hd-avatar-media">
-                {avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={avatarUrl} alt={config.displayName} />
-                ) : <span>{initials(config.displayName)}</span>}
+          <div className="hd-profile-anchor">
+            {config.discordPresenceEnabled && config.discordUserId ? (
+              <div className="hd-discord-float">
+                <DiscordPresenceCard
+                  userId={config.discordUserId}
+                  profileUrl={config.discordProfileUrl}
+                  badges={config.discordBadgeIds}
+                />
               </div>
-              <span className="hd-avatar-glitch-frame" aria-hidden="true">
-                <i /><i /><i /><i /><i /><i />
-              </span>
-            </div>
-            <span className="hd-views">◉ {views.toLocaleString("en-US")}</span>
-            <p className="hd-handle">{config.handle}</p>
-            <div className="hd-name-row">
-              <h1 data-text={config.displayName}>{config.displayName}</h1>
-              <div className="hd-badges" aria-label="Profile badges">
-                <span title="verified">✦</span><span title="night owl">☾</span><span title="music">♫</span>
+            ) : null}
+            <article className="hd-profile">
+              <div className="hd-profile-line" />
+              <div className="hd-avatar">
+                <button
+                  className={`hd-avatar-flipper ${
+                    secretStage === "revealed" ||
+                    secretStage === "admin-password"
+                      ? "is-revealed"
+                      : ""
+                  }`}
+                  type="button"
+                  aria-label={
+                    secretStage === "revealed"
+                      ? "Open Customize"
+                      : config.displayName
+                  }
+                  onClick={handleAvatarSecret}
+                >
+                  <span className="hd-avatar-face hd-avatar-front">
+                    <span className="hd-avatar-media">
+                      {avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={avatarUrl} alt={config.displayName} />
+                      ) : <span>{initials(config.displayName)}</span>}
+                    </span>
+                    <span
+                      className={`hd-avatar-glitch-frame hd-avatar-frame-${config.avatarFrame}`}
+                      aria-hidden="true"
+                    >
+                      <i /><i /><i /><i /><i /><i />
+                    </span>
+                  </span>
+                  <span className="hd-avatar-face hd-avatar-back">
+                    <small>OWNER ACCESS</small>
+                    <strong>CUSTOMIZE</strong>
+                    <i>tap to unlock</i>
+                  </span>
+                </button>
               </div>
-            </div>
-            <p className="hd-typed">{typedBio}<i /></p>
-            <div className="hd-profile-actions">
-              <div className="hd-socials">
-                {visibleLinks.map((link) => (
-                  <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer" aria-label={link.label}>
-                    <b>{socialMark(link.label)}</b><span>{link.label}</span>
-                  </a>
-                ))}
+              <span className="hd-views">◉ {views.toLocaleString("en-US")}</span>
+              <p className="hd-handle">{config.handle}</p>
+              <div className="hd-name-row">
+                <h1 data-text={config.displayName}>{config.displayName}</h1>
+                <div className="hd-badges" aria-label="Profile badges">
+                  <span title="verified">✦</span><span title="night owl">☾</span><span title="music">♫</span>
+                </div>
               </div>
-              <button
-                className={`hd-pet-skin-toggle ${petSkin === "wuxiang" ? "active" : ""}`}
-                type="button"
-                aria-pressed={petSkin === "wuxiang"}
-                onClick={() => {
-                  const nextSkin: PetSkin = petSkin === "classic" ? "wuxiang" : "classic";
-                  setPetSkin(nextSkin);
-                  window.localStorage.setItem("hd-pet-skin", nextSkin);
-                  setPetLeaf(null);
-                  setPetAttack(null);
-                }}
-              >
-                <i aria-hidden="true">相</i>
-                <span>PET SKIN</span>
-                <strong>{petSkin === "wuxiang" ? "VÔ TƯỚNG" : "ĐẠI THÁNH"}</strong>
-                <b aria-hidden="true">↔</b>
-              </button>
-            </div>
-          </article>
+              <p className="hd-typed">{typedBio}<i /></p>
+              <div className="hd-profile-actions">
+                <div className="hd-socials">
+                  {visibleLinks.map((link) => (
+                    <a
+                      key={link.id}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={link.label}
+                      data-social={link.icon}
+                      style={
+                        {
+                          "--social-color": socialIcon(link.icon).color,
+                        } as React.CSSProperties
+                      }
+                    >
+                      <b><SocialIcon id={link.icon} /></b>
+                      <span>{link.label}</span>
+                    </a>
+                  ))}
+                </div>
+                <button
+                  className={`hd-pet-skin-toggle ${petSkin === "wuxiang" ? "active" : ""}`}
+                  type="button"
+                  aria-pressed={petSkin === "wuxiang"}
+                  onClick={() => {
+                    const nextSkin: PetSkin = petSkin === "classic" ? "wuxiang" : "classic";
+                    setPetSkin(nextSkin);
+                    window.localStorage.setItem("hd-pet-skin", nextSkin);
+                    setPetLeaf(null);
+                    setPetAttack(null);
+                  }}
+                >
+                  <i aria-hidden="true">相</i>
+                  <span>PET SKIN</span>
+                  <strong>{petSkin === "wuxiang" ? "VÔ TƯỚNG" : "ĐẠI THÁNH"}</strong>
+                  <b aria-hidden="true">↔</b>
+                </button>
+              </div>
+            </article>
+          </div>
 
           <aside
             ref={musicStackRef}
@@ -757,14 +927,62 @@ export function ProfileClient({ initialProfile }: Props) {
         </button>
       ) : null}
 
-      <button
-        className="hd-customize"
-        type="button"
-        disabled
-        title="Customize will be available later"
-      >
-        CUSTOMIZE · SOON
-      </button>
+      {secretStage === "reveal-code" ||
+      secretStage === "admin-password" ? (
+        <div
+          className="hd-secret-overlay"
+          role="presentation"
+          onPointerDown={(event) => {
+            if (event.target === event.currentTarget) closeSecretDialog();
+          }}
+        >
+          <form
+            className="hd-secret-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="hd-secret-title"
+            onSubmit={submitSecret}
+          >
+            <button
+              className="hd-secret-close"
+              type="button"
+              aria-label="Close"
+              onClick={closeSecretDialog}
+            >
+              ×
+            </button>
+            <small>HD / PRIVATE ACCESS</small>
+            <h2 id="hd-secret-title">
+              {secretStage === "reveal-code"
+                ? "Secret detected."
+                : "Owner password."}
+            </h2>
+            <p>
+              {secretStage === "reveal-code"
+                ? "Nhập mã bí mật để lật mặt sau của avatar."
+                : "Nhập mật khẩu Customize để mở studio."}
+            </p>
+            <input
+              type="password"
+              value={secretValue}
+              onChange={(event) => setSecretValue(event.target.value)}
+              autoComplete="off"
+              autoFocus
+              required
+            />
+            {secretError ? (
+              <div className="hd-secret-error">{secretError}</div>
+            ) : null}
+            <button
+              className="hd-secret-submit"
+              type="submit"
+              disabled={secretSubmitting || !secretValue}
+            >
+              {secretSubmitting ? "VERIFYING…" : "UNLOCK"}
+            </button>
+          </form>
+        </div>
+      ) : null}
     </main>
   );
 }

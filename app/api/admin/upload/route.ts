@@ -1,7 +1,7 @@
-import { getChatGPTUser } from "@/app/chatgpt-auth";
-import { requireOwner, runtimeEnv } from "@/lib/profile";
+import { isAdminRequest } from "@/lib/admin-auth";
+import { runtimeEnv } from "@/lib/profile";
 
-const MAX_FILE_SIZE = 35 * 1024 * 1024;
+const MAX_FILE_SIZE = 95 * 1024 * 1024;
 const ALLOWED_PREFIXES = ["image/", "audio/", "video/"];
 
 function safeFileName(value: string) {
@@ -13,18 +13,8 @@ function safeFileName(value: string) {
 }
 
 export async function POST(request: Request) {
-  const user = await getChatGPTUser();
-  if (!user) {
-    return Response.json({ error: "Sign in required." }, { status: 401 });
-  }
-
-  try {
-    await requireOwner(user);
-  } catch (error) {
-    return Response.json(
-      { error: error instanceof Error ? error.message : "Owner access required." },
-      { status: 403 },
-    );
+  if (!(await isAdminRequest(request))) {
+    return Response.json({ error: "Unauthorized." }, { status: 401 });
   }
 
   const form = await request.formData();
@@ -32,13 +22,15 @@ export async function POST(request: Request) {
   if (!(file instanceof File)) {
     return Response.json({ error: "Choose a file first." }, { status: 400 });
   }
+  const isLrc = file.name.toLowerCase().endsWith(".lrc");
   if (
     file.size <= 0 ||
     file.size > MAX_FILE_SIZE ||
-    !ALLOWED_PREFIXES.some((prefix) => file.type.startsWith(prefix))
+    (!isLrc &&
+      !ALLOWED_PREFIXES.some((prefix) => file.type.startsWith(prefix)))
   ) {
     return Response.json(
-      { error: "Use an image, audio or video file under 35 MB." },
+      { error: "Dùng file ảnh, âm thanh, video hoặc LRC dưới 95 MB." },
       { status: 400 },
     );
   }
@@ -49,15 +41,17 @@ export async function POST(request: Request) {
   }
 
   const id = crypto.randomUUID();
-  const key = `${file.type.split("/")[0]}/${id}-${safeFileName(file.name)}`;
+  const assetType = isLrc ? "lyrics" : file.type.split("/")[0];
+  const contentType = isLrc ? "text/plain; charset=utf-8" : file.type;
+  const key = `${assetType}/${id}-${safeFileName(file.name)}`;
   await MEDIA.put(key, file.stream(), {
     httpMetadata: {
-      contentType: file.type,
+      contentType,
       cacheControl: "public, max-age=31536000, immutable",
     },
     customMetadata: {
       originalName: file.name.slice(0, 180),
-      owner: user.email,
+      owner: "profile-admin",
     },
   });
   await DB.prepare(
@@ -65,7 +59,7 @@ export async function POST(request: Request) {
       (id, object_key, name, content_type, size)
      VALUES (?, ?, ?, ?, ?)`,
   )
-    .bind(id, key, file.name.slice(0, 180), file.type, file.size)
+    .bind(id, key, file.name.slice(0, 180), contentType, file.size)
     .run();
 
   return Response.json(

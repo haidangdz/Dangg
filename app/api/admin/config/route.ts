@@ -1,38 +1,21 @@
-import { getChatGPTUser } from "@/app/chatgpt-auth";
-import { getProfile, requireOwner, saveProfile } from "@/lib/profile";
+import { isAdminRequest } from "@/lib/admin-auth";
+import { getProfile, saveProfile } from "@/lib/profile";
 
-async function authorize() {
-  const user = await getChatGPTUser();
-  if (!user) {
-    return {
-      error: Response.json({ error: "Sign in required." }, { status: 401 }),
-    };
-  }
-  try {
-    await requireOwner(user);
-    return { user };
-  } catch (error) {
-    return {
-      error: Response.json(
-        {
-          error:
-            error instanceof Error ? error.message : "Owner access required.",
-        },
-        { status: 403 },
-      ),
-    };
-  }
+async function authorize(request: Request) {
+  return isAdminRequest(request);
 }
 
-export async function GET() {
-  const auth = await authorize();
-  if ("error" in auth) return auth.error;
-  return Response.json({ ...(await getProfile()), user: auth.user });
+export async function GET(request: Request) {
+  if (!(await authorize(request))) {
+    return Response.json({ error: "Unauthorized." }, { status: 401 });
+  }
+  return Response.json(await getProfile());
 }
 
 export async function PUT(request: Request) {
-  const auth = await authorize();
-  if ("error" in auth) return auth.error;
+  if (!(await authorize(request))) {
+    return Response.json({ error: "Unauthorized." }, { status: 401 });
+  }
 
   try {
     const config = await saveProfile(await request.json());

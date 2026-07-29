@@ -1,5 +1,5 @@
 import vinext from "vinext";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import hostingConfig from "./.openai/hosting.json";
 import { sites } from "./build/sites-vite-plugin";
 
@@ -33,7 +33,27 @@ const localBindingConfig = {
     : [],
 };
 
-export default defineConfig(async () => {
+export default defineConfig(async ({ mode }) => {
+  // Only inject local credentials into the development runtime. Production
+  // credentials are configured as encrypted Worker secrets in Cloudflare, so
+  // they can never be written into the generated deployment bundle.
+  const localEnvironment =
+    mode === "development" ? loadEnv(mode, process.cwd(), "") : {};
+  const runtimeBindingConfig = {
+    ...localBindingConfig,
+    ...(mode === "development"
+      ? {
+          vars: {
+            ADMIN_PASSWORD: localEnvironment.ADMIN_PASSWORD ?? "",
+            ADMIN_REVEAL_PASSWORD:
+              localEnvironment.ADMIN_REVEAL_PASSWORD ?? "",
+            ADMIN_SESSION_SECRET:
+              localEnvironment.ADMIN_SESSION_SECRET ?? "",
+          },
+        }
+      : {}),
+  };
+
   // Keep Wrangler and Miniflare state project-local. These are non-secret tool
   // settings; application environment belongs in ignored `.env*` files.
   process.env.WRANGLER_WRITE_LOGS ??= "false";
@@ -52,7 +72,7 @@ export default defineConfig(async () => {
       sites(),
       cloudflare({
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
-        config: localBindingConfig,
+        config: runtimeBindingConfig,
       }),
     ],
   };
