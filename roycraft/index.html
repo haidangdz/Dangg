@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="RoyCraft, launcher Minecraft cho Horizon Rust. Xem khối cỏ hoá thành một khối đồng cơ khí.">
+  <meta name="theme-color" content="#161711">
+  <title>RoyCraft · Demo</title>
+  <link rel="icon" href="mark.png">
+  <link rel="stylesheet" href="demo.css">
+  <script src="demo.js" defer></script>
+</head>
+<body>
+  <header class="bar">
+    <a class="brand" href="./"><img src="mark.png" alt="" width="36" height="36"> RoyCraft</a>
+    <a href="../">Hải Đăng</a>
+  </header>
+  <main>
+    <section class="intro">
+      <p class="edition">MINECRAFT / RUST</p>
+      <h1>RoyCraft</h1>
+      <p class="lead">Từ khối cỏ đến lõi đồng. Xem lớp kim loại và mạch phát sáng hình thành quanh khối voxel.</p>
+      <a class="mods" href="https://github.com/Roynit/roycraft-mods">Xem mod RoyCraft <span aria-hidden="true">↗</span></a>
+    </section>
+    <figure class="demo">
+      <div class="stage" role="img" aria-label="Khối cỏ pixel xoay và chuyển thành khối đồng oxy hoá có mạch phát sáng màu cam.">
+        <div class="shadow"></div>
+        <div class="world">
+          <div class="block">
+            <div class="face front"><span class="alloy"></span><span class="circuit"></span></div>
+            <div class="face right"><span class="alloy"></span><span class="circuit"></span></div>
+            <div class="face back"><span class="alloy"></span><span class="circuit"></span></div>
+            <div class="face left"><span class="alloy"></span><span class="circuit"></span></div>
+            <div class="face top"><span class="alloy"></span><span class="circuit core"></span></div>
+            <div class="face bottom"><span class="alloy"></span></div>
+          </div>
+        </div>
+      </div>
+      <figcaption>
+        <span><i></i> Khối cỏ <span class="arrow" aria-hidden="true">→</span> Đồng oxy hoá</span>
+        <div class="actions">
+          <button type="button" id="pause">Tạm dừng</button>
+          <button type="button" id="replay">Phát lại</button>
+        </div>
+      </figcaption>
+    </figure>
+  </main>
+</body>
+</html>
